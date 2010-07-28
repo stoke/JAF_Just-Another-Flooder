@@ -81,6 +81,11 @@ int main(int argc, char **argv) {
 	struct sockaddr_in sin;
 	int root = 1, *ptr = &root;
 	
+	if (argc < 4) {
+		printf("jaf <ip> <port> <source_ip>");
+		return -1;
+	}
+	
 	sin_init(atoi(argv[2]), argv[1], &sin);
 	memset(buf, 0, PKT_LEN);
 	
