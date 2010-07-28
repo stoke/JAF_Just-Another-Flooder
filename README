@@ -1,0 +1,15 @@
+JAF - Just Another Flooder is an ICMP/TCP Flooder.
+
+It uses ONLY native linux headers, isn't required ANY library (such as libnet).
+
+Install it with install.sh as root user:
+
+sudo sh install.sh
+
+For start it, run:
+
+jaf <ip> <port> <source ip>
+
+And jaf done the work.
+
+Enjoy (not too much).
